@@ -2,7 +2,9 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
-
+body {
+  font-family: var(--font-geist-sans) !important;
+}
 @theme inline {
   --color-background: var(--background);
   --color-elevated: var(--elevated);
@@ -738,7 +740,7 @@
   font-size: 0.75rem;
   line-height: 1.2;
   letter-spacing: 0.06em;
-  text-transform: uppercase;
+  /* text-transform: uppercase; */
   font-weight: 600;
 }
 .font-serif {

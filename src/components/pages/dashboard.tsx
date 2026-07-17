@@ -476,10 +476,10 @@ export function Dashboard({
           <p className="text-label text-primary-foreground/80 tracking-elegant">
             {greeting()}
           </p>
-          <p className="text-[11px] font-medium text-primary-foreground/55 mt-0.5">
+          <p className="text-sm font-mono font-medium text-primary-foreground/55 mt-0.5">
             {format(now, "EEEE, MMMM d")}
           </p>
-          <h1 className="text-display-serif mt-1">
+          <h1 className="text-display-serif mt-4">
             Hello, <span className="italic">Abantika</span>
           </h1>
           <p className="text-sm text-primary-foreground/85 mt-1.5 max-w-[18rem]">
@@ -493,7 +493,7 @@ export function Dashboard({
               <span className="text-xs font-bold tabular-nums">
                 {waterStreak}
               </span>
-              <span className="text-[10px] text-primary-foreground/70">water</span>
+              <span className="text-label text-primary-foreground/70">water</span>
             </div>
             <div className="w-px h-3 bg-primary-foreground/30" />
             <div className="flex items-center gap-1.5 text-primary-foreground/90">
@@ -501,7 +501,7 @@ export function Dashboard({
               <span className="text-xs font-bold tabular-nums">
                 {journalStreak}
               </span>
-              <span className="text-[10px] text-primary-foreground/70">
+              <span className="text-label text-primary-foreground/70">
                 journal
               </span>
             </div>
@@ -511,7 +511,7 @@ export function Dashboard({
               <span className="text-xs font-bold tabular-nums">
                 {wellnessScore}
               </span>
-              <span className="text-[10px] text-primary-foreground/70">
+              <span className="text-label text-primary-foreground/70">
                 wellness
               </span>
             </div>
@@ -902,20 +902,98 @@ export function Dashboard({
               </p>
               <div className="mt-3 flex gap-2">
                 <Pressable
-                  onClick={() => addWater(250)}
-                  className="px-3 py-1.5 rounded-full gradient-primary-bg text-primary-foreground text-[11px] font-semibold shadow-glow flex items-center gap-1"
-                >
-                  <Droplet size={12} /> +250ml
-                </Pressable>
-                <Pressable
                   onClick={() => setMoodOpen(true)}
                   className="px-3 py-1.5 rounded-full bg-surface-secondary text-text-primary text-[11px] font-semibold border border-border flex items-center gap-1"
                 >
-                  <Smile size={12} /> Mood
+                  <Smile size={12} /> Log Mood
                 </Pressable>
               </div>
             </div>
+          
           </div>
+
+
+        {/* ===== 4. Hydration Wave Card (KEEP, compact) ===== */}
+      <StaggerItem index={6}>
+        <SurfaceCard className="relative overflow-hidden p-4 mt-5">
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <p className="text-label text-text-tertiary">Hydration</p>
+              <div className="flex items-baseline gap-1.5 mt-0.5">
+                <span className="text-xl font-bold text-text-primary tabular-nums">
+                  <AnimatedCounter value={hydration.current} />ml
+                </span>
+                <span className="text-caption text-text-secondary">
+                  / {hydration.goal}ml
+                </span>
+              </div>
+            </div>
+            <IconBadge icon={Droplet} variant="solid" size={36} />
+          </div>
+
+          {/* Wave progress */}
+          <div className="relative h-14 rounded-2xl overflow-hidden bg-surface-secondary">
+            <motion.div
+              className="absolute inset-y-0 left-0"
+              style={{ background: "var(--gradient-primary)" }}
+              initial={reduce ? false : { width: 0 }}
+              animate={{ width: `${hydrationPct}%` }}
+              transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+            />
+            <motion.div
+              className="absolute inset-0"
+              initial={reduce ? false : { x: "-50%" }}
+              animate={reduce ? undefined : { x: ["-50%", "0%"] }}
+              transition={{ duration: 7, repeat: Infinity, ease: "linear" }}
+              style={{ width: "200%" }}
+            >
+              <div
+                className="absolute inset-y-0 left-0 w-1/2"
+                style={{
+                  background:
+                    "linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent)",
+                }}
+              />
+              <div
+                className="absolute inset-y-0 left-1/2 w-1/2"
+                style={{
+                  background:
+                    "linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent)",
+                }}
+              />
+            </motion.div>
+            <div className="relative h-full flex items-center justify-between px-3.5">
+              <span className="text-xs font-bold text-primary-foreground drop-shadow-sm">
+                {Math.round(hydrationPct)}%
+              </span>
+              <div className="flex items-center gap-1.5 text-primary-foreground/90">
+                <Waves size={13} />
+                <span className="text-[11px] font-medium">
+                  {hydrationPct >= 100
+                    ? "Goal complete!"
+                    : `${hydration.goal - hydration.current}ml to go`}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-3 flex gap-2">
+            <Pressable
+              onClick={() => addWater(250)}
+              className="flex-1 py-2 rounded-2xl gradient-primary-bg text-primary-foreground text-xs font-semibold shadow-glow flex items-center justify-center"
+            >
+              +250ml
+            </Pressable>
+            <Pressable
+              onClick={() => addWater(500)}
+              className="flex-1 py-2 rounded-2xl bg-surface-secondary text-text-primary text-xs font-semibold border border-border flex items-center justify-center"
+            >
+              +500ml
+            </Pressable>
+          </div>
+        </SurfaceCard>
+      </StaggerItem>
+
         </SurfaceCard>
       </StaggerItem>
 

@@ -430,15 +430,15 @@ export const DAILY_QUOTES = [
 ];
 
 export const DAILY_WELLNESS_TIPS = [
-  "Drink a glass of water right now — your future self will thank you.",
-  "Take 3 deep breaths. Let your shoulders drop away from your ears.",
-  "Stand up and stretch for 30 seconds. Your body craves movement.",
-  "Step outside for 2 minutes of fresh air and natural light.",
-  "Put your phone down and look at something 20 feet away for 20 seconds.",
-  "Write down one thing you're grateful for, right now.",
-  "Have you eaten something nourishing in the last 3 hours?",
-  "Check your posture — ears over shoulders, shoulders over hips.",
-  "Splash cold water on your face for an instant reset.",
-  "Send a kind message to someone you love. Connection is wellness.",
+  "Drink a glass of water right now — your future self will thank you. (Unt banja)",
+  "Take 3 deep breaths. Let your shoulders drop away from your ears. (sans le bhidu)",
+  "Stand up and stretch for 30 seconds. Your body craves movement. (hil ja thoda moti)",
+  "Step outside for 2 minutes of fresh air and natural light. (kabhi hota to nahi h)",
+  "Put your phone down and look at something 20 feet away for 20 seconds. (bhut dikehga)",
+  "Write down one thing you're grateful for, right now. (mera naam liko)",
+  "Have you eaten something nourishing in the last 3 hours? (chiliChiken nahi dryfruits bolra)",
+  "Check your posture — ears over shoulders, shoulders over hips. (bhensa)",
+  "Splash cold water on your face for an instant reset. (Ankh ko baraf laga lo)",
+  "Send a kind message to someone you love (omkar❤️). Connection is wellness.",
 ];
 

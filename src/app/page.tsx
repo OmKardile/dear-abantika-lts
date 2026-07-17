@@ -91,7 +91,7 @@ export default function Home() {
             <div
               className="relative z-10 w-full max-w-md mx-auto h-[100dvh] overflow-y-auto scroll-area"
               style={{
-                paddingTop: "calc(env(safe-area-inset-top) + 1rem)",
+                paddingTop: "calc(env(safe-area-inset-top) + 2rem)",
                 paddingBottom: "calc(env(safe-area-inset-bottom) + 2rem)",
               }}
             >

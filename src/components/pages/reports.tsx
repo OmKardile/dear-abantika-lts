@@ -491,7 +491,7 @@ export function Reports() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 mt-2">
       <motion.div
         initial={reduce ? { opacity: 0 } : { opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}

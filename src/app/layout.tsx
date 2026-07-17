@@ -1,13 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
+import { Geist, Geist_Mono, Dr_Sugiyama, Great_Vibes, Playfair_Display } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeApplier } from "@/components/providers/theme-applier";
 import { UndoProvider } from "@/components/providers/undo-provider";
 
-const geistSans = Geist({
+// const geistSans = Geist({
+//   variable: "--font-geist-sans",
+//   subsets: ["latin"],
+// });
+
+// const geistSans = localfont({
+//   src: "../../public/fonts/SF-Pro-Rounded-Regular.otf",
+//   variable: "--font-geist-sans",
+// });
+
+const geistSans = localFont({
+  src: "../fonts/SF-Pro-Rounded-Regular.otf",
   variable: "--font-geist-sans",
-  subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
@@ -15,12 +26,17 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const playfair = Playfair_Display({
+const playfair = Dr_Sugiyama({
   variable: "--font-playfair",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  style: ["normal", "italic"],
+  weight: "400",
 });
+// const playfair = Playfair_Display({
+//   variable: "--font-playfair",
+//   subsets: ["latin"],
+//   weight: ["500", "600", "700"],
+//   style: ["normal", "italic"],
+// });
 
 export const metadata: Metadata = {
   title: "abantikas companion in absence of Omkar",

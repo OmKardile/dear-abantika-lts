@@ -133,7 +133,7 @@ export function Settings() {
           <IconBadge icon={Info} variant="soft" size={40} />
           <div>
             <p className="text-title text-text-primary">About App</p>
-            <p className="text-caption text-text-secondary">Version 6.1 · Stable </p>
+            <p className="text-caption text-text-secondary">Dear Abantika ❤️ · Version 6.2 · Stable </p>
           </div>
         </div>
         <p className="text-body text-text-secondary leading-relaxed">
