@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Dear Abantika</string>
+    <string name="title_activity_main">Dear Abantika</string>
+    <string name="package_name">com.omkar.avantikardile</string>
+    <string name="custom_url_scheme">com.omkar.avantikardile</string>
+</resources>
