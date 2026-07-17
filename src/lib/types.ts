@@ -165,14 +165,7 @@ export interface PCOSSettings {
 
 export interface AppSettings {
   pcos: PCOSSettings;
-  security: {
-    pinEnabled: boolean;
-    pinHash?: string; // simple hash, not crypto-secure
-    biometricEnabled: boolean;
-    autoLockMinutes: number; // 0 = never, else minutes of inactivity
-  };
   appearance: {
-    amoledMode: boolean; // true black background for OLED
     fontSize: "small" | "medium" | "large";
     dynamicColors: boolean; // Material You
   };

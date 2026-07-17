@@ -54,13 +54,7 @@ const defaultSettings: AppSettings = {
   pcos: {
     enabled: false,
   },
-  security: {
-    pinEnabled: false,
-    biometricEnabled: false,
-    autoLockMinutes: 0,
-  },
   appearance: {
-    amoledMode: false,
     fontSize: "medium",
     dynamicColors: true,
   },
@@ -241,7 +235,6 @@ interface StoreState extends AppData {
   // settings
   updateSettings: (patch: Partial<AppSettings>) => void;
   setPCOS: (patch: Partial<AppSettings["pcos"]>) => void;
-  setSecurity: (patch: Partial<AppSettings["security"]>) => void;
   setAppearance: (patch: Partial<AppSettings["appearance"]>) => void;
   // backup
   exportData: () => string;
@@ -582,8 +575,6 @@ export const useStore = create<StoreState>()(
         set((s) => ({ settings: { ...s.settings, ...patch } })),
       setPCOS: (patch) =>
         set((s) => ({ settings: { ...s.settings, pcos: { ...s.settings.pcos, ...patch } } })),
-      setSecurity: (patch) =>
-        set((s) => ({ settings: { ...s.settings, security: { ...s.settings.security, ...patch } } })),
       setAppearance: (patch) =>
         set((s) => ({ settings: { ...s.settings, appearance: { ...s.settings.appearance, ...patch } } })),
 
@@ -610,35 +601,67 @@ export const useStore = create<StoreState>()(
       importData: (json, mode = "overwrite") => {
         try {
           const parsed = JSON.parse(json);
+          // Sanitize: ensure all arrays are arrays, filter items without id
+          const safeArr = <T extends { id?: string }>(v: unknown): T[] =>
+            Array.isArray(v) ? v.filter((x): x is T => x && typeof x === "object" && "id" in x) : [];
+          // Sanitize settings: merge with defaults to ensure all fields exist
+          const safeSettings = (raw: unknown): AppSettings => {
+            if (!raw || typeof raw !== "object") return defaultSettings;
+            const r = raw as Record<string, unknown>;
+            return {
+              pcos: { ...defaultSettings.pcos, ...(r.pcos as object ?? {}) },
+              appearance: { ...defaultSettings.appearance, ...(r.appearance as object ?? {}) },
+              notifications: { ...defaultSettings.notifications, ...(r.notifications as object ?? {}) },
+            };
+          };
+          // Sanitize hydration
+          const safeHydration = (raw: unknown) => {
+            if (!raw || typeof raw !== "object") return { current: 0, goal: 2000, history: [] as { date: string; amount: number }[] };
+            const r = raw as Record<string, unknown>;
+            return {
+              current: typeof r.current === "number" ? r.current : 0,
+              goal: typeof r.goal === "number" ? r.goal : 2000,
+              history: Array.isArray(r.history) ? r.history : [],
+            };
+          };
+          const safeMood = (raw: unknown) => {
+            if (!raw || typeof raw !== "object") return { current: "😊", date: todayStr() };
+            const r = raw as Record<string, unknown>;
+            return {
+              current: typeof r.current === "string" ? r.current : "😊",
+              date: typeof r.date === "string" ? r.date : todayStr(),
+            };
+          };
+
           if (mode === "merge") {
             // Merge: keep existing, add new (dedupe by id)
             set((s) => ({
-              cycleEntries: dedupe([...s.cycleEntries, ...(parsed.cycleEntries ?? [])]),
-              journalEntries: dedupe([...s.journalEntries, ...(parsed.journalEntries ?? [])]),
-              wishlistItems: dedupe([...s.wishlistItems, ...(parsed.wishlistItems ?? [])]),
-              reminders: dedupe([...s.reminders, ...(parsed.reminders ?? [])]),
-              careTasks: dedupe([...s.careTasks, ...(parsed.careTasks ?? [])]),
-              dailyTasks: dedupe([...s.dailyTasks, ...(parsed.dailyTasks ?? [])]),
-              hydrationLogs: dedupe([...s.hydrationLogs, ...(parsed.hydrationLogs ?? [])]),
-              moodLogs: dedupe([...s.moodLogs, ...(parsed.moodLogs ?? [])]),
-              hydration: parsed.hydration ?? s.hydration,
-              mood: parsed.mood ?? s.mood,
-              settings: parsed.settings ? { ...s.settings, ...parsed.settings } : s.settings,
+              cycleEntries: dedupe([...s.cycleEntries, ...safeArr<CycleEntry>(parsed.cycleEntries)]),
+              journalEntries: dedupe([...s.journalEntries, ...safeArr<JournalEntry>(parsed.journalEntries)]),
+              wishlistItems: dedupe([...s.wishlistItems, ...safeArr<WishlistItem>(parsed.wishlistItems)]),
+              reminders: dedupe([...s.reminders, ...safeArr<Reminder>(parsed.reminders)]),
+              careTasks: dedupe([...s.careTasks, ...safeArr<CareTask>(parsed.careTasks)]),
+              dailyTasks: dedupe([...s.dailyTasks, ...safeArr<DailyTask>(parsed.dailyTasks)]),
+              hydrationLogs: dedupe([...s.hydrationLogs, ...safeArr<HydrationLog>(parsed.hydrationLogs)]),
+              moodLogs: dedupe([...s.moodLogs, ...safeArr<MoodLog>(parsed.moodLogs)]),
+              hydration: safeHydration(parsed.hydration),
+              mood: safeMood(parsed.mood),
+              settings: safeSettings(parsed.settings),
             }));
           } else {
             // Overwrite (default)
-            set((s) => ({
-              hydration: parsed.hydration ?? s.hydration,
-              hydrationLogs: parsed.hydrationLogs ?? s.hydrationLogs,
-              moodLogs: parsed.moodLogs ?? s.moodLogs,
-              mood: parsed.mood ?? s.mood,
-              cycleEntries: parsed.cycleEntries ?? [],
-              journalEntries: parsed.journalEntries ?? [],
-              wishlistItems: parsed.wishlistItems ?? [],
-              reminders: parsed.reminders ?? [],
-              careTasks: parsed.careTasks ?? [],
-              dailyTasks: parsed.dailyTasks ?? [],
-              settings: parsed.settings ? { ...defaultSettings, ...parsed.settings } : s.settings,
+            set(() => ({
+              hydration: safeHydration(parsed.hydration),
+              hydrationLogs: safeArr<HydrationLog>(parsed.hydrationLogs),
+              moodLogs: safeArr<MoodLog>(parsed.moodLogs),
+              mood: safeMood(parsed.mood),
+              cycleEntries: safeArr<CycleEntry>(parsed.cycleEntries),
+              journalEntries: safeArr<JournalEntry>(parsed.journalEntries),
+              wishlistItems: safeArr<WishlistItem>(parsed.wishlistItems),
+              reminders: safeArr<Reminder>(parsed.reminders),
+              careTasks: safeArr<CareTask>(parsed.careTasks),
+              dailyTasks: safeArr<DailyTask>(parsed.dailyTasks),
+              settings: safeSettings(parsed.settings),
             }));
           }
           return true;

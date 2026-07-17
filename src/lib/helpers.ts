@@ -52,11 +52,10 @@ export function timeUntil(time: string): string {
 export async function downloadJson(
   data: string,
   filename: string
-): Promise<{ method: "share" | "download" | "clipboard"; success: boolean }> {
-  // 1. Try Web Share API with file — works on Android WebView (API 23+),
-  //    iOS Safari, and mobile Chrome. Lets the user save to Downloads or share.
-  if (typeof navigator !== "undefined" && navigator.canShare && navigator.share) {
-    try {
+): Promise<{ method: string; success: boolean }> {
+  // 1. Try Web Share API with file — works on Android Chrome, newer WebView, iOS Safari
+  try {
+    if (typeof navigator !== "undefined" && navigator.canShare && navigator.share) {
       const file = new File([data], filename, { type: "application/json" });
       if (navigator.canShare({ files: [file] })) {
         await navigator.share({
@@ -66,15 +65,15 @@ export async function downloadJson(
         });
         return { method: "share", success: true };
       }
-    } catch (e) {
-      // user cancelled or share failed — fall through to other methods
-      if ((e as Error).name === "AbortError") {
-        return { method: "share", success: false };
-      }
     }
+  } catch (e) {
+    if ((e as Error).name === "AbortError") {
+      return { method: "share", success: false };
+    }
+    // fall through to next method
   }
 
-  // 2. Fall back to blob download — works in desktop browsers
+  // 2. Try blob download via anchor — works on desktop browsers, some WebViews
   try {
     const blob = new Blob([data], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -85,16 +84,32 @@ export async function downloadJson(
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    // Give a small delay to let the download trigger
+    await new Promise((r) => setTimeout(r, 300));
     return { method: "download", success: true };
   } catch {
-    // 3. Last resort: copy to clipboard so the user can paste into a notes app
-    try {
-      await navigator.clipboard.writeText(data);
-      return { method: "clipboard", success: true };
-    } catch {
-      return { method: "clipboard", success: false };
+    // fall through
+  }
+
+  // 3. Try opening a data URI in a new window — works when WebView opens external browser
+  try {
+    const encoded = encodeURIComponent(data);
+    const dataUri = `data:application/json;charset=utf-8,${encoded}`;
+    const win = window.open(dataUri, "_blank");
+    if (win) {
+      return { method: "data-uri", success: true };
     }
+  } catch {
+    // fall through
+  }
+
+  // 4. Last resort: copy to clipboard
+  try {
+    await navigator.clipboard.writeText(data);
+    return { method: "clipboard", success: true };
+  } catch {
+    return { method: "clipboard", success: false };
   }
 }
 

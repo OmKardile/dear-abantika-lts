@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [6.1.0] — 2025-07-15
+
+### Fixed
+- **Backup export on Android** — improved fallback chain: Web Share API → blob download → data URI → clipboard, ensuring export works in Android WebView
+- **App crash on restore** — added comprehensive data sanitization in `importData`: validates all arrays, filters items without `id`, merges settings with defaults to prevent undefined access
+- **Restore functionality** — fully working on both web and Android; paste JSON and file picker both functional
+
+### Removed
+- **App lock / PIN / biometric** — removed entirely (was non-functional: stored a PIN hash but never enforced a lock screen)
+- **AMOLED mode** — removed (was a toggle with no CSS effect)
+- **Status chips** in Settings About card (PCOS Mode / App Lock indicators) — removed per user request
+
+### Changed
+- Settings now has 4 tabs: Theme, Appearance, Backup, Archive (was 5 with Security)
+- Removed `security` and `amoledMode` from `AppSettings` type and store
+
+---
+
 ## [6.0.0] — 2025-07-15
 
 ### Added — 12 Premium Features

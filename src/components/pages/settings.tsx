@@ -5,8 +5,6 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   Palette,
   SlidersHorizontal,
-  Lock,
-  Bell,
   Database,
   Archive as ArchiveIcon,
   Plus,
@@ -22,16 +20,13 @@ import {
   Sparkles,
   BookHeart,
   ShoppingBag,
-  Fingerprint,
-  Delete,
-  SunMoon,
-  MoonStar,
   Type,
   Activity,
   Pill,
   CalendarDays,
   Stethoscope,
   CircleAlert,
+  SunMoon,
 } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { THEMES } from "@/lib/themes";
@@ -58,15 +53,13 @@ import { ConfirmDialog } from "@/components/premium/confirm-dialog";
 import { Portal } from "@/components/premium/portal";
 import { toast } from "@/hooks/use-toast";
 
-type Tab = "theme" | "appearance" | "security" | "backup" | "archive";
+type Tab = "theme" | "appearance" | "backup" | "archive";
 
 type FontSize = AppSettings["appearance"]["fontSize"];
-type AutoLock = "0" | "1" | "5" | "15";
 
 export function Settings() {
   const reduce = useReducedMotion();
   const [tab, setTab] = React.useState<Tab>("theme");
-  const { settings } = useStore();
 
   const tabs: {
     id: Tab;
@@ -76,7 +69,6 @@ export function Settings() {
   }[] = [
     { id: "theme", label: "Theme", short: "Theme", icon: Palette },
     { id: "appearance", label: "Appearance", short: "Look", icon: SlidersHorizontal },
-    { id: "security", label: "Security", short: "Lock", icon: Lock },
     { id: "backup", label: "Backup", short: "Backup", icon: Database },
     { id: "archive", label: "Archive", short: "Archive", icon: ArchiveIcon },
   ];
@@ -130,7 +122,6 @@ export function Settings() {
         >
           {tab === "theme" && <ThemeTab />}
           {tab === "appearance" && <AppearanceTab />}
-          {tab === "security" && <SecurityTab />}
           {tab === "backup" && <BackupTab />}
           {tab === "archive" && <ArchiveTab />}
         </motion.div>
@@ -141,8 +132,8 @@ export function Settings() {
         <div className="flex items-center gap-3 mb-3">
           <IconBadge icon={Info} variant="soft" size={40} />
           <div>
-            <p className="text-title text-text-primary">About Abantika</p>
-            <p className="text-caption text-text-secondary">Version 6.0 · Premium</p>
+            <p className="text-title text-text-primary">About App</p>
+            <p className="text-caption text-text-secondary">Version 6.1 · Stable </p>
           </div>
         </div>
         <p className="text-body text-text-secondary leading-relaxed">
@@ -150,34 +141,6 @@ export function Settings() {
           All data lives only on this device —
           nothing is ever sent anywhere. Crafted with care😚 & love💕 for her.
         </p>
-
-        {/* Status chips */}
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-secondary">
-            <span
-              className={cn(
-                "w-2 h-2 rounded-full shrink-0",
-                settings.pcos.enabled ? "bg-success" : "bg-text-tertiary"
-              )}
-            />
-            <span className="text-caption text-text-secondary">PCOS Mode</span>
-            <span className="text-caption font-semibold text-text-primary ml-auto">
-              {settings.pcos.enabled ? "On" : "Off"}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-secondary">
-            <span
-              className={cn(
-                "w-2 h-2 rounded-full shrink-0",
-                settings.security.pinEnabled ? "bg-success" : "bg-text-tertiary"
-              )}
-            />
-            <span className="text-caption text-text-secondary">App Lock</span>
-            <span className="text-caption font-semibold text-text-primary ml-auto">
-              {settings.security.pinEnabled ? "On" : "Off"}
-            </span>
-          </div>
-        </div>
 
         <div className="mt-4 italic flex items-center gap-1.5 text-caption text-text-tertiary">
           Made with <Heart size={12} className="text-primary" fill="currentColor" /> By <a target="_blank" href="https://omkardile-portfolio.vercel.app/" className="text-primary underline hover:opacity-70"> Omkar </a>
@@ -274,55 +237,18 @@ function SegmentedControl({
 
 /* ============== THEME TAB ============== */
 function ThemeTab() {
-  const { theme, setTheme, settings, setAppearance } = useStore();
-  const amoledOn = settings.appearance.amoledMode;
+  const { theme, setTheme } = useStore();
   return (
     <div className="space-y-4">
       <p className="text-body text-text-secondary px-1">
         Choose a palette that feels like home, or omkars love. 😚😁👍
       </p>
 
-      {/* AMOLED quick-toggle */}
-      <StaggerItem index={0}>
-        <SurfaceCard
-          className={cn(
-            "p-4 flex items-center gap-3",
-            amoledOn && "ring-1 ring-primary/30"
-          )}
-        >
-          <div className="w-11 h-11 rounded-2xl bg-surface-secondary flex items-center justify-center shrink-0">
-            <MoonStar size={18} className="text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-body text-text-primary font-semibold">AMOLED mode</p>
-            <p className="text-caption text-text-secondary mt-0.5 leading-relaxed">
-              Pure black background for OLED screens
-            </p>
-          </div>
-          <ToggleSwitch
-            checked={amoledOn}
-            onChange={(v) => setAppearance({ amoledMode: v })}
-            aria-label="Toggle AMOLED mode"
-          />
-        </SurfaceCard>
-      </StaggerItem>
-
-      {amoledOn && (
-        <motion.div
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-start gap-2 px-1 text-caption text-text-secondary"
-        >
-          <Sparkles size={13} className="text-primary mt-0.5 shrink-0" />
-          <span>Dark themes look best with AMOLED mode on.</span>
-        </motion.div>
-      )}
-
       <div className="space-y-4">
         {THEMES.map((t, i) => {
           const active = theme === t.id;
           return (
-            <StaggerItem key={t.id} index={i + 1}>
+            <StaggerItem key={t.id} index={i}>
               <Pressable
                 onClick={() => setTheme(t.id)}
                 className="w-full text-left"
@@ -414,28 +340,8 @@ function AppearanceTab() {
 
   return (
     <div className="space-y-4">
-      {/* AMOLED Mode */}
-      <StaggerItem index={0}>
-        <SurfaceCard className="p-5">
-          <div className="flex items-start gap-3">
-            <IconBadge icon={MoonStar} variant="soft" size={44} />
-            <div className="flex-1 min-w-0">
-              <p className="text-title text-text-primary">AMOLED mode</p>
-              <p className="text-caption text-text-secondary mt-0.5 leading-relaxed">
-                Pure black background for OLED screens, saves battery.
-              </p>
-            </div>
-            <ToggleSwitch
-              checked={appearance.amoledMode}
-              onChange={(v) => setAppearance({ amoledMode: v })}
-              aria-label="Toggle AMOLED mode"
-            />
-          </div>
-        </SurfaceCard>
-      </StaggerItem>
-
       {/* Font size */}
-      <StaggerItem index={1}>
+      <StaggerItem index={0}>
         <SurfaceCard className="p-5">
           <div className="flex items-center gap-3 mb-3">
             <IconBadge icon={Type} variant="soft" size={44} />
@@ -634,417 +540,6 @@ function AppearanceTab() {
         </SurfaceCard>
       </StaggerItem>
     </div>
-  );
-}
-
-/* ============== SECURITY TAB ============== */
-function SecurityTab() {
-  const { settings, setSecurity } = useStore();
-  const { security } = settings;
-
-  // PIN dialog state
-  const [pinDialog, setPinDialog] = React.useState<{
-    open: boolean;
-    mode: "set" | "change" | "disable";
-  }>({ open: false, mode: "set" });
-
-  const openPinSetup = () => setPinDialog({ open: true, mode: "set" });
-  const openPinChange = () => setPinDialog({ open: true, mode: "change" });
-  const openPinDisable = () => setPinDialog({ open: true, mode: "disable" });
-  const closePinDialog = () =>
-    setPinDialog((prev) => ({ ...prev, open: false }));
-
-  const handlePinSuccess = (pinHash?: string) => {
-    const mode = pinDialog.mode;
-    if (mode === "set") {
-      setSecurity({ pinEnabled: true, pinHash });
-      toast({ title: "PIN lock enabled" });
-    } else if (mode === "change") {
-      setSecurity({ pinHash });
-      toast({ title: "PIN changed" });
-    } else if (mode === "disable") {
-      setSecurity({
-        pinEnabled: false,
-        pinHash: undefined,
-        biometricEnabled: false,
-      });
-      toast({ title: "PIN lock disabled" });
-    }
-    closePinDialog();
-  };
-
-  const handleEnableToggle = (v: boolean) => {
-    if (v) openPinSetup();
-    else openPinDisable();
-  };
-
-  return (
-    <div className="space-y-4">
-      {/* App Lock section */}
-      <StaggerItem index={0}>
-        <SurfaceCard className="p-5">
-          <SectionHeader
-            title="App lock"
-            subtitle="Protect your private data"
-            className="mb-4"
-          />
-
-          {/* Enable PIN */}
-          <div className="flex items-start gap-3">
-            <IconBadge icon={Lock} variant="soft" size={44} />
-            <div className="flex-1 min-w-0">
-              <p className="text-body text-text-primary font-semibold">PIN lock</p>
-              <p className="text-caption text-text-secondary mt-0.5 leading-relaxed">
-                Require a 4-digit PIN to open the app
-              </p>
-            </div>
-            <ToggleSwitch
-              checked={security.pinEnabled}
-              onChange={handleEnableToggle}
-              aria-label="Toggle PIN lock"
-            />
-          </div>
-
-          {/* When enabled: change/disable + biometric */}
-          <AnimatePresence initial={false}>
-            {security.pinEnabled && (
-              <motion.div
-                key="pin-enabled"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-                className="overflow-hidden"
-              >
-                <div className="mt-4 pt-4 border-t border-divider space-y-4">
-                  {/* Change / Disable buttons */}
-                  <div className="flex gap-2">
-                    <Pressable
-                      onClick={openPinChange}
-                      className="flex-1 py-2.5 rounded-2xl bg-surface-secondary text-text-primary text-sm font-semibold border border-border flex items-center justify-center gap-1.5"
-                    >
-                      <Lock size={14} /> Change PIN
-                    </Pressable>
-                    <Pressable
-                      onClick={openPinDisable}
-                      className="flex-1 py-2.5 rounded-2xl border border-error/30 text-error text-sm font-semibold flex items-center justify-center gap-1.5"
-                    >
-                      <Trash2 size={14} /> Disable
-                    </Pressable>
-                  </div>
-
-                  {/* Biometric */}
-                  <div className="flex items-start gap-3 p-3 rounded-2xl bg-surface-secondary">
-                    <div className="w-10 h-10 rounded-xl bg-surface flex items-center justify-center shrink-0">
-                      <Fingerprint size={18} className="text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-body text-text-primary font-semibold">
-                        Fingerprint / face
-                      </p>
-                      <p className="text-caption text-text-secondary mt-0.5 leading-relaxed">
-                        Use biometrics instead of typing your PIN
-                      </p>
-                    </div>
-                    <ToggleSwitch
-                      checked={security.biometricEnabled}
-                      onChange={(v) => setSecurity({ biometricEnabled: v })}
-                      aria-label="Toggle biometric unlock"
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </SurfaceCard>
-      </StaggerItem>
-
-      {/* Auto-lock */}
-      <StaggerItem index={1}>
-        <SurfaceCard className="p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <IconBadge icon={SunMoon} variant="soft" size={44} />
-            <div
-              className={cn("flex-1", !security.pinEnabled && "opacity-50")}
-            >
-              <p className="text-title text-text-primary">Auto-lock</p>
-              <p className="text-caption text-text-secondary">
-                {security.pinEnabled
-                  ? "Lock the app after inactivity"
-                  : "Enable PIN lock to use auto-lock"}
-              </p>
-            </div>
-          </div>
-          <SegmentedControl
-            value={String(security.autoLockMinutes) as AutoLock}
-            layoutId="security-autolock"
-            onChange={(v) => setSecurity({ autoLockMinutes: Number(v) })}
-            options={[
-              { value: "0", label: "Never" },
-              { value: "1", label: "1 min" },
-              { value: "5", label: "5 min" },
-              { value: "15", label: "15 min" },
-            ]}
-          />
-        </SurfaceCard>
-      </StaggerItem>
-
-      {/* PIN dialog — portaled above nav */}
-      <Portal>
-        <PinPadDialog
-          open={pinDialog.open}
-          mode={pinDialog.mode}
-          expectedHash={security.pinHash}
-          onClose={closePinDialog}
-          onSuccess={handlePinSuccess}
-        />
-      </Portal>
-    </div>
-  );
-}
-
-/* ============== PIN PAD DIALOG ============== */
-function PinPadDialog({
-  open,
-  mode,
-  expectedHash,
-  onClose,
-  onSuccess,
-}: {
-  open: boolean;
-  mode: "set" | "change" | "disable";
-  expectedHash?: string;
-  onClose: () => void;
-  onSuccess: (pinHash?: string) => void;
-}) {
-  type Stage = "verify-current" | "set-new" | "confirm-new";
-  const initialStage: Stage = mode === "set" ? "set-new" : "verify-current";
-  const [stage, setStage] = React.useState<Stage>(initialStage);
-  const [entry, setEntry] = React.useState("");
-  const [tempPin, setTempPin] = React.useState<string | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
-  const [shakeKey, setShakeKey] = React.useState(0);
-
-  // Refs to avoid stale closures inside setTimeout
-  const onSuccessRef = React.useRef(onSuccess);
-  React.useEffect(() => {
-    onSuccessRef.current = onSuccess;
-  }, [onSuccess]);
-
-  // Reset on open
-  React.useEffect(() => {
-    if (open) {
-      setStage(initialStage);
-      setEntry("");
-      setTempPin(null);
-      setError(null);
-      setShakeKey(0);
-    }
-  }, [open, initialStage]);
-
-  // Lock body scroll while open
-  React.useEffect(() => {
-    if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [open]);
-
-  const titles: Record<Stage, string> = {
-    "verify-current": "Enter your current PIN",
-    "set-new":
-      mode === "change" ? "Enter a new 4-digit PIN" : "Create a 4-digit PIN",
-    "confirm-new": "Re-enter to confirm",
-  };
-
-  const advanceStage = (pin: string) => {
-    if (stage === "verify-current") {
-      if (btoa(pin) === expectedHash) {
-        if (mode === "disable") {
-          onSuccessRef.current(undefined);
-          return;
-        }
-        setError(null);
-        setStage("set-new");
-        setEntry("");
-      } else {
-        setError("Incorrect PIN. Try again.");
-        setShakeKey((k) => k + 1);
-        setEntry("");
-      }
-    } else if (stage === "set-new") {
-      setTempPin(pin);
-      setError(null);
-      setStage("confirm-new");
-      setEntry("");
-    } else if (stage === "confirm-new") {
-      if (pin === tempPin) {
-        onSuccessRef.current(btoa(pin));
-      } else {
-        setError("PINs don't match. Try again.");
-        setShakeKey((k) => k + 1);
-        setTempPin(null);
-        setStage("set-new");
-        setEntry("");
-      }
-    }
-  };
-
-  const handleDigit = (d: string) => {
-    if (entry.length >= 4) return;
-    setError(null);
-    const next = entry + d;
-    setEntry(next);
-    if (next.length === 4) {
-      // small delay so user sees the 4th dot fill
-      setTimeout(() => advanceStage(next), 180);
-    }
-  };
-
-  const handleBackspace = () => {
-    setError(null);
-    setEntry((prev) => prev.slice(0, -1));
-  };
-
-  return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-md"
-            onClick={onClose}
-          />
-          <motion.div
-            initial={{ y: 30, opacity: 0, scale: 0.97 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: 20, opacity: 0, scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 360, damping: 30 }}
-            className="relative w-full max-w-[340px] rounded-[28px] glass-sheet p-6"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-9 h-9 rounded-2xl bg-surface-secondary flex items-center justify-center shrink-0">
-                  <Lock size={16} className="text-primary" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-label text-text-tertiary leading-tight">
-                    Security
-                  </p>
-                  <h2 className="text-headline-serif text-text-primary text-lg leading-tight truncate">
-                    {mode === "disable"
-                      ? "Disable PIN"
-                      : mode === "change"
-                      ? "Change PIN"
-                      : "Set up PIN"}
-                  </h2>
-                </div>
-              </div>
-              <button
-                onClick={onClose}
-                className="w-9 h-9 rounded-full bg-surface-secondary flex items-center justify-center shrink-0"
-                aria-label="Close"
-              >
-                <Plus size={18} className="rotate-45 text-text-secondary" />
-              </button>
-            </div>
-
-            {/* Stage title */}
-            <p className="text-center text-caption text-text-secondary mb-4">
-              {titles[stage]}
-            </p>
-
-            {/* Dots (with shake on error) */}
-            <motion.div
-              key={shakeKey}
-              animate={
-                shakeKey > 0 ? { x: [0, -6, 6, -4, 4, 0] } : { x: 0 }
-              }
-              transition={{ duration: 0.4 }}
-              className="flex gap-3.5 justify-center mb-2"
-            >
-              {[0, 1, 2, 3].map((i) => {
-                const filled = i < entry.length;
-                return (
-                  <motion.div
-                    key={i}
-                    animate={{ scale: filled ? 1 : 0.65 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 500,
-                      damping: 25,
-                    }}
-                    className={cn(
-                      "w-3.5 h-3.5 rounded-full transition-colors",
-                      filled ? "bg-primary" : "bg-border"
-                    )}
-                  />
-                );
-              })}
-            </motion.div>
-
-            {/* Error message slot */}
-            <div className="h-5 flex items-center justify-center mb-3">
-              <AnimatePresence mode="wait">
-                {error && (
-                  <motion.p
-                    key={error}
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="text-label text-error font-medium"
-                  >
-                    {error}
-                  </motion.p>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Number pad */}
-            <div className="grid grid-cols-3 gap-2.5">
-              {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
-                <motion.button
-                  key={d}
-                  whileTap={{ scale: 0.92 }}
-                  onClick={() => handleDigit(d)}
-                  className="h-14 rounded-2xl bg-surface-secondary border border-border flex items-center justify-center text-xl font-semibold text-text-primary"
-                >
-                  {d}
-                </motion.button>
-              ))}
-              <div aria-hidden />
-              <motion.button
-                whileTap={{ scale: 0.92 }}
-                onClick={() => handleDigit("0")}
-                className="h-14 rounded-2xl bg-surface-secondary border border-border flex items-center justify-center text-xl font-semibold text-text-primary"
-              >
-                0
-              </motion.button>
-              <motion.button
-                whileTap={{ scale: 0.92 }}
-                onClick={handleBackspace}
-                disabled={entry.length === 0}
-                className="h-14 rounded-2xl bg-surface-secondary border border-border flex items-center justify-center text-text-secondary disabled:opacity-40"
-                aria-label="Backspace"
-              >
-                <Delete size={20} />
-              </motion.button>
-            </div>
-
-            <p className="text-center text-label text-text-tertiary mt-4">
-              Your PIN is stored only on this device.
-            </p>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
   );
 }
 
