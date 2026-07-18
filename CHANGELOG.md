@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [6.1.0] — 2025-07-15
+## [6.2] — 2026-07-18
+
+### ui, ux updates
+
+---
+
+## [6.1.0] — 2026-07-17
 
 ### Fixed
 - **Backup export on Android** — improved fallback chain: Web Share API → blob download → data URI → clipboard, ensuring export works in Android WebView
@@ -25,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [6.0.0] — 2025-07-15
+## [6.0.0] — 2026-07-15
 
 ### Added — 12 Premium Features
 - **Native Reminder Engine** — Capacitor Local Notifications integration with recurring reminders, reboot restoration, notification channels, snooze/dismiss actions, grouped notifications, and exact alarm support
@@ -73,7 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [5.0.0] — 2025-07-02
+## [5.0.0] — 2026-07-02
 
 ### Added
 - **PCOS Mode** — confidence-based predictions, cycle irregularity tracking, ovulation uncertainty indicator, insulin resistance notes, doctor notes, symptom trends
@@ -98,7 +104,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.5.0] — 2025-07-01
+## [3.5.0] — 2026-07-01
 
 ### Added
 - **Glassmorphism** — frosted glass effect on all popup sheets, dialogs, bottom navigation, and Daily Reflection card
@@ -112,7 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.1.0] — 2025-07-01
+## [3.1.0] — 2026-07-01
 
 ### Fixed
 - FAB collision with bottom navigation — all FABs repositioned with safe-area-aware calc
@@ -125,7 +131,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.0.0] — 2025-07-01
+## [3.0.0] — 2026-07-01
 
 ### Added
 - **15 premium themes** with full design-token systems (light & dark)
@@ -148,7 +154,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.0.0] — 2025-07-01
+## [2.0.0] — 2026-07-01
 
 ### Added
 - Initial premium wellness companion
