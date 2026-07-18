@@ -39,7 +39,7 @@ import {
   type WishlistItem,
   type AppSettings,
 } from "@/lib/types";
-import { formatTime, downloadJson, readJsonFile } from "@/lib/helpers";
+import { formatTime, downloadJson, readJsonFile, isNativeApp } from "@/lib/helpers";
 import { cn } from "@/lib/utils";
 import {
   SurfaceCard,
@@ -133,7 +133,7 @@ export function Settings() {
           <IconBadge icon={Info} variant="soft" size={40} />
           <div>
             <p className="text-title text-text-primary">About App</p>
-            <p className="text-caption text-text-secondary">Dear Abantika ❤️ · Version 6.2 · Stable </p>
+            <p className="text-caption text-text-secondary">Dear Abantika ❤️ · Version 6.3 · LTS</p>
           </div>
         </div>
         <p className="text-body text-text-secondary leading-relaxed">
@@ -874,6 +874,8 @@ function BackupTab() {
   const [importText, setImportText] = React.useState("");
   const [exporting, setExporting] = React.useState(false);
   const [confirmReset, setConfirmReset] = React.useState(false);
+  const [backupData, setBackupData] = React.useState<string | null>(null);
+  const [copied, setCopied] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const doExport = async () => {
@@ -882,12 +884,15 @@ function BackupTab() {
       const data = exportData();
       const filename = `abantika-backup-${new Date().toISOString().split("T")[0]}.json`;
       const result = await downloadJson(data, filename);
+
       if (!result.success) {
+        // Share failed or user cancelled — show the copy modal so they still get their data
+        setBackupData(data);
         toast({
-          title: "Export cancelled",
-          description: "No file was saved.",
+          title: "Backup ready to copy",
+          description: "Copy your backup below, or share it.",
         });
-      } else if (result.method === "share") {
+      } else if (result.method === "share" || result.method === "share-text") {
         toast({
           title: "Backup shared",
           description: "Save it to Files or send it somewhere safe.",
@@ -898,6 +903,7 @@ function BackupTab() {
           description: "JSON copied to clipboard — paste into a notes app to save.",
         });
       } else {
+        // "download" — web browser only, file was saved
         toast({
           title: "Backup exported",
           description: "Your data has been saved.",
@@ -911,6 +917,39 @@ function BackupTab() {
       });
     } finally {
       setExporting(false);
+    }
+  };
+
+  const copyBackup = async () => {
+    if (!backupData) return;
+    try {
+      await navigator.clipboard.writeText(backupData);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast({ title: "Copied!", description: "Paste into a notes app to save." });
+    } catch {
+      // Fallback: select the textarea
+      const ta = document.querySelector('[data-backup-textarea]') as HTMLTextAreaElement;
+      if (ta) {
+        ta.select();
+        document.execCommand("copy");
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+        toast({ title: "Copied!", description: "Paste into a notes app to save." });
+      }
+    }
+  };
+
+  const shareBackupText = async () => {
+    if (!backupData) return;
+    try {
+      if (navigator.share) {
+        await navigator.share({ text: backupData, title: "Abantika Backup" });
+      } else {
+        copyBackup();
+      }
+    } catch {
+      // user cancelled — ignore
     }
   };
 
@@ -1147,6 +1186,72 @@ function BackupTab() {
           variant="destructive"
           onConfirm={confirmResetAction}
         />
+      </Portal>
+
+      {/* Backup data modal — shown when download fails (Android WebView) */}
+      <Portal>
+        <AnimatePresence>
+          {backupData !== null && (
+            <motion.div
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <div
+                className="absolute inset-0 bg-black/30 backdrop-blur-md"
+                onClick={() => setBackupData(null)}
+              />
+              <motion.div
+                initial={{ y: 30, opacity: 0, scale: 0.97 }}
+                animate={{ y: 0, opacity: 1, scale: 1 }}
+                exit={{ y: 20, opacity: 0, scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 360, damping: 30 }}
+                className="relative w-full max-w-md max-h-[80dvh] flex flex-col rounded-[28px] glass-sheet p-5"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="text-label text-text-tertiary">Your backup</p>
+                    <h2 className="text-headline-serif text-text-primary">Copy & save</h2>
+                  </div>
+                  <button
+                    onClick={() => setBackupData(null)}
+                    className="w-9 h-9 rounded-full bg-surface-secondary flex items-center justify-center"
+                    aria-label="Close"
+                  >
+                    <Plus size={18} className="rotate-45 text-text-secondary" />
+                  </button>
+                </div>
+                <p className="text-caption text-text-secondary mb-3">
+                  Tap "Copy" then paste into a notes app, or tap "Share" to send it elsewhere.
+                </p>
+                <textarea
+                  data-backup-textarea
+                  readOnly
+                  value={backupData}
+                  rows={8}
+                  className="w-full flex-1 min-h-0 rounded-2xl bg-surface-secondary border border-border p-3 text-[11px] font-mono text-text-primary outline-none resize-none scroll-area mb-3"
+                />
+                <div className="flex gap-2">
+                  <Pressable
+                    onClick={shareBackupText}
+                    className="flex-1 py-3 rounded-2xl bg-surface-secondary text-text-primary text-sm font-semibold border border-border flex items-center justify-center gap-2"
+                  >
+                    <Upload size={16} />
+                    Share
+                  </Pressable>
+                  <Pressable
+                    onClick={copyBackup}
+                    className="flex-1 py-3 rounded-2xl gradient-primary-bg text-primary-foreground text-sm font-bold shadow-glow flex items-center justify-center gap-2"
+                  >
+                    <Check size={16} className={copied ? "opacity-100" : "opacity-0"} />
+                    {copied ? "Copied!" : "Copy"}
+                  </Pressable>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Portal>
     </div>
   );

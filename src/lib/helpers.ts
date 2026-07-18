@@ -49,31 +49,61 @@ export function timeUntil(time: string): string {
   return `in ${hours}h ${mins}m`;
 }
 
+/** Check if running inside Capacitor native (Android/iOS) */
+export function isNativeApp(): boolean {
+  if (typeof window === "undefined") return false;
+  const cap = (window as any).Capacitor;
+  if (!cap) return false;
+  // Capacitor v6: use isNativePlatform() or check platform
+  if (typeof cap.isNativePlatform === "function") return cap.isNativePlatform();
+  if (cap.platform) return cap.platform !== "web";
+  return false;
+}
+
 export async function downloadJson(
   data: string,
   filename: string
 ): Promise<{ method: string; success: boolean }> {
-  // 1. Try Web Share API with file — works on Android Chrome, newer WebView, iOS Safari
-  try {
-    if (typeof navigator !== "undefined" && navigator.canShare && navigator.share) {
-      const file = new File([data], filename, { type: "application/json" });
-      if (navigator.canShare({ files: [file] })) {
+  // On Capacitor native (Android/iOS), blob download silently fails.
+  // Try Web Share API first; if that fails, return failure so caller shows the copy modal.
+  if (isNativeApp()) {
+    try {
+      if (navigator.share) {
+        // Try sharing as text first (more reliable than file sharing in WebView)
         await navigator.share({
-          files: [file],
+          text: data,
           title: "Abantika Backup",
-          text: "Your wellness data backup",
         });
-        return { method: "share", success: true };
+        return { method: "share-text", success: true };
+      }
+    } catch (e) {
+      if ((e as Error).name === "AbortError") {
+        return { method: "share-text", success: false };
       }
     }
-  } catch (e) {
-    if ((e as Error).name === "AbortError") {
-      return { method: "share", success: false };
+    // Try file share
+    try {
+      if (navigator.canShare && navigator.share) {
+        const file = new File([data], filename, { type: "application/json" });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: "Abantika Backup",
+          });
+          return { method: "share", success: true };
+        }
+      }
+    } catch (e) {
+      if ((e as Error).name === "AbortError") {
+        return { method: "share", success: false };
+      }
     }
-    // fall through to next method
+    // All share methods failed on native — return failure so caller shows copy modal
+    return { method: "native-fail", success: false };
   }
 
-  // 2. Try blob download via anchor — works on desktop browsers, some WebViews
+  // === Web browser (not native) ===
+  // 1. Try blob download — works on desktop & mobile browsers
   try {
     const blob = new Blob([data], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -85,26 +115,31 @@ export async function downloadJson(
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 2000);
-    // Give a small delay to let the download trigger
     await new Promise((r) => setTimeout(r, 300));
     return { method: "download", success: true };
   } catch {
     // fall through
   }
 
-  // 3. Try opening a data URI in a new window — works when WebView opens external browser
+  // 2. Try Web Share API
   try {
-    const encoded = encodeURIComponent(data);
-    const dataUri = `data:application/json;charset=utf-8,${encoded}`;
-    const win = window.open(dataUri, "_blank");
-    if (win) {
-      return { method: "data-uri", success: true };
+    if (navigator.canShare && navigator.share) {
+      const file = new File([data], filename, { type: "application/json" });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: "Abantika Backup",
+        });
+        return { method: "share", success: true };
+      }
     }
-  } catch {
-    // fall through
+  } catch (e) {
+    if ((e as Error).name === "AbortError") {
+      return { method: "share", success: false };
+    }
   }
 
-  // 4. Last resort: copy to clipboard
+  // 3. Last resort: clipboard
   try {
     await navigator.clipboard.writeText(data);
     return { method: "clipboard", success: true };

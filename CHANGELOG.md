@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [6.3.1] — 2026-07-18
+
+### Fixed — Critical
+- **Backup export on Android (Capacitor)** — root cause found and fixed:
+  - Previous code used `window.Capacitor.isNative` which **doesn't exist** — the correct check is `window.Capacitor.isNativePlatform()` or `window.Capacitor.platform !== 'web'`
+  - On native Android, blob `<a download>` silently fails (no error thrown, no file saved) but the code returned `success: true` → false "Backup exported" toast
+  - Now `downloadJson()` detects Capacitor native correctly and **skips blob download entirely** (it can't work in WebView)
+  - On native: tries `navigator.share({ text })` first (most reliable on Android), then file share, then returns failure so the Copy & Save modal appears
+  - The Copy & Save modal has "Copy" (clipboard + execCommand fallback) and "Share" (navigator.share) buttons — user always gets their data
+- Added `isNativeApp()` helper function for reliable Capacitor detection
+
+---
+
+## [6.3.0] — LTS — 2026-07-18
+
+### Fixed — Priority
+- **Backup export on Android** — when file download silently fails in Android WebView, a "Copy & save" modal now appears with the full backup JSON in a textarea, plus "Copy" and "Share" buttons so the user always gets their data
+- **Restore crash** — comprehensive data sanitization prevents crashes on malformed backup files
+- **No false success** — the app no longer shows "Backup exported" when nothing was actually saved; on Capacitor native builds it shows the backup data modal instead
+
+### Applied — User's manual changes
+- **Custom font**: SF Pro Rounded (Regular/Bold/Light .otf) as the primary sans-serif via `next/font/local`
+- **Display font**: Dr_Sugiyama replaces Playfair Display for headings
+- **globals.css**: `body { font-family: var(--font-geist-sans) !important; }` to enforce SF Pro Rounded globally; `.text-label` uppercase commented out
+- **Dashboard**: date uses `text-sm font-mono`, hero spacing `mt-4`, stat labels use `text-label`, removed +250ml quick button from Daily Wellness Tip
+- **Settings**: About card renamed to "About App", version string personalized
+- **Page overlay**: top padding increased to 2rem
+- **Reports**: root margin `mt-2`
+- **Types**: DAILY_WELLNESS_TIPS personalized with Hindi/English mix
+
+### Changed
+- Version bumped to 6.3.0 LTS across metadata, settings, and package.json
+
+---
+
 ## [6.2] — 2026-07-18
 
 ### ui, ux updates

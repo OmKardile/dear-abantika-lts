@@ -52,8 +52,8 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "omkar" }],
   applicationName: "Dear Abantika",
-  generator: "Dear Abantika v6.0",
-  other: { version: "6.0" },
+  generator: "Dear Abantika v6.3 LTS",
+  other: { version: "6.3" },
   icons: {
     icon: "https://i.ibb.co/93tgkqKv/playstore-icon.png",
   },
