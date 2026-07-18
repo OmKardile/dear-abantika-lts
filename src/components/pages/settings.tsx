@@ -39,7 +39,7 @@ import {
   type WishlistItem,
   type AppSettings,
 } from "@/lib/types";
-import { formatTime, downloadJson, readJsonFile, isNativeApp } from "@/lib/helpers";
+import { formatTime, downloadJson, readJsonFile, isNativeApp, pickBackupFile } from "@/lib/helpers";
 import { cn } from "@/lib/utils";
 import {
   SurfaceCard,
@@ -892,9 +892,9 @@ function BackupTab() {
           title: "Backup ready to copy",
           description: "Copy your backup below, or share it.",
         });
-      } else if (result.method === "share" || result.method === "share-text") {
+      } else if (result.method === "native-share" || result.method === "share" || result.method === "share-text") {
         toast({
-          title: "Backup shared",
+          title: "Backup shared ✓",
           description: "Save it to Files or send it somewhere safe.",
         });
       } else if (result.method === "clipboard") {
@@ -953,7 +953,32 @@ function BackupTab() {
     }
   };
 
-  const handleFilePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFilePick = async () => {
+    try {
+      const text = await pickBackupFile();
+      if (!text) return; // user cancelled
+      const ok = importData(text);
+      if (ok) {
+        toast({ title: "Backup restored", description: "Welcome back." });
+        setImportOpen(false);
+        setImportText("");
+      } else {
+        toast({
+          title: "Import failed",
+          description: "That file doesn't look like a valid backup.",
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "Import failed",
+        description: "Could not read that file.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleWebFilePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
@@ -977,7 +1002,6 @@ function BackupTab() {
         variant: "destructive",
       });
     }
-    // reset input so the same file can be picked again
     e.target.value = "";
   };
 
@@ -1008,12 +1032,12 @@ function BackupTab() {
 
   return (
     <div className="space-y-4">
-      {/* hidden file input for import */}
+      {/* hidden file input for web import (native uses pickBackupFile) */}
       <input
         ref={fileInputRef}
         type="file"
         accept="application/json,.json"
-        onChange={handleFilePick}
+        onChange={handleWebFilePick}
         className="hidden"
         aria-hidden
       />
@@ -1068,7 +1092,7 @@ function BackupTab() {
           </div>
           <div className="flex gap-2">
             <Pressable
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => isNativeApp() ? handleFilePick() : fileInputRef.current?.click()}
               className="flex-1 py-3 rounded-2xl gradient-primary-bg text-primary-foreground text-sm font-bold shadow-glow flex items-center justify-center gap-2"
             >
               <Upload size={16} />

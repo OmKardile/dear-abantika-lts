@@ -555,6 +555,7 @@ Private project. All rights reserved.
 npm install @capacitor/core @capacitor/cli @capacitor/android
 
 npm install @capacitor/app
+npm install @capacitor/share
 
 npm install @capacitor/status-bar
 

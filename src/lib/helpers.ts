@@ -54,56 +54,70 @@ export function isNativeApp(): boolean {
   if (typeof window === "undefined") return false;
   const cap = (window as any).Capacitor;
   if (!cap) return false;
-  // Capacitor v6: use isNativePlatform() or check platform
   if (typeof cap.isNativePlatform === "function") return cap.isNativePlatform();
   if (cap.platform) return cap.platform !== "web";
   return false;
 }
 
+/**
+ * Export backup JSON.
+ * On Capacitor native (Android/iOS): writes a temp file with Filesystem plugin,
+ * then shares it via @capacitor/share (native Android share sheet — very reliable).
+ * On web: tries blob download → Web Share API → clipboard.
+ */
 export async function downloadJson(
   data: string,
   filename: string
 ): Promise<{ method: string; success: boolean }> {
-  // On Capacitor native (Android/iOS), blob download silently fails.
-  // Try Web Share API first; if that fails, return failure so caller shows the copy modal.
+  // === Capacitor native (Android/iOS) ===
   if (isNativeApp()) {
     try {
-      if (navigator.share) {
-        // Try sharing as text first (more reliable than file sharing in WebView)
-        await navigator.share({
-          text: data,
-          title: "Abantika Backup",
+      // Dynamically import so web builds don't bundle native plugins
+      const { Filesystem, Directory } = await import("@capacitor/filesystem");
+      const { Share } = await import("@capacitor/share");
+
+      // Write temp file to app's Cache directory
+      const writeResult = await Filesystem.writeFile({
+        path: filename,
+        data: data,
+        directory: Directory.Cache,
+        encoding: "utf8" as any,
+      });
+
+      // Share the file via native share sheet
+      await Share.share({
+        title: "Dear Abantika Backup",
+        files: [writeResult.uri],
+        dialogTitle: "Save your backup",
+      });
+
+      // Clean up temp file after sharing
+      try {
+        await Filesystem.deleteFile({
+          path: filename,
+          directory: Directory.Cache,
         });
-        return { method: "share-text", success: true };
+      } catch {
+        // cleanup is best-effort
       }
+
+      return { method: "native-share", success: true };
     } catch (e) {
-      if ((e as Error).name === "AbortError") {
-        return { method: "share-text", success: false };
-      }
-    }
-    // Try file share
-    try {
-      if (navigator.canShare && navigator.share) {
-        const file = new File([data], filename, { type: "application/json" });
-        if (navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title: "Abantika Backup",
-          });
-          return { method: "share", success: true };
+      // Share failed or user cancelled
+      if (e && typeof e === "object" && "message" in e) {
+        const msg = (e as Error).message;
+        if (msg.includes("canceled") || msg.includes("cancelled") || msg.includes("User")) {
+          return { method: "native-share", success: false };
         }
       }
-    } catch (e) {
-      if ((e as Error).name === "AbortError") {
-        return { method: "share", success: false };
-      }
+      // Fall through to web methods as fallback
     }
-    // All share methods failed on native — return failure so caller shows copy modal
+    // If native share failed, return failure so the Copy modal shows
     return { method: "native-fail", success: false };
   }
 
-  // === Web browser (not native) ===
-  // 1. Try blob download — works on desktop & mobile browsers
+  // === Web browser ===
+  // 1. Blob download
   try {
     const blob = new Blob([data], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -121,15 +135,12 @@ export async function downloadJson(
     // fall through
   }
 
-  // 2. Try Web Share API
+  // 2. Web Share API
   try {
     if (navigator.canShare && navigator.share) {
       const file = new File([data], filename, { type: "application/json" });
       if (navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: "Abantika Backup",
-        });
+        await navigator.share({ files: [file], title: "Abantika Backup" });
         return { method: "share", success: true };
       }
     }
@@ -139,7 +150,7 @@ export async function downloadJson(
     }
   }
 
-  // 3. Last resort: clipboard
+  // 3. Clipboard
   try {
     await navigator.clipboard.writeText(data);
     return { method: "clipboard", success: true };
@@ -155,5 +166,63 @@ export function readJsonFile(file: File): Promise<string> {
     reader.onload = () => resolve(reader.result as string);
     reader.onerror = () => reject(new Error("Could not read file"));
     reader.readAsText(file);
+  });
+}
+
+/**
+ * Native file picker for import — uses Capacitor FilePicker on native,
+ * falls back to <input type="file"> on web.
+ * Returns the file contents as a string.
+ */
+export async function pickBackupFile(): Promise<string | null> {
+  if (isNativeApp()) {
+    try {
+      // Try @capawesome/capacitor-file-picker (registered as FilePicker in logcat)
+      const FilePicker = (window as any).Capacitor?.Plugins?.FilePicker
+        || (window as any).FilePicker;
+      if (FilePicker) {
+        const result = await FilePicker.pickFiles({
+          types: ["application/json", "text/plain"],
+          readData: true,
+        });
+        if (result?.files?.[0]?.data) {
+          // Base64 decoded
+          const b64 = result.files[0].data;
+          return atob(b64);
+        }
+        if (result?.files?.[0]?.path) {
+          // Read via Filesystem
+          const { Filesystem, Directory } = await import("@capacitor/filesystem");
+          const path = result.files[0].path;
+          const readResult = await Filesystem.readFile({ path });
+          if (typeof readResult.data === "string") return readResult.data;
+          // Blob
+          return await readResult.data.text();
+        }
+      }
+    } catch {
+      // fall through to web picker
+    }
+  }
+
+  // Web: use hidden <input type="file">
+  return new Promise((resolve) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json,.json";
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) {
+        resolve(null);
+        return;
+      }
+      try {
+        const text = await readJsonFile(file);
+        resolve(text);
+      } catch {
+        resolve(null);
+      }
+    };
+    input.click();
   });
 }

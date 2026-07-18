@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [6.3.2] — 2026-07-18 [stable]
+
+### Fixed — Native Android backup (using Capacitor plugins)
+- **Backup export now uses native Capacitor Share plugin** — `@capacitor/share` with `@capacitor/filesystem` to write a temp file and share it via Android's native share sheet. This is far more reliable than the Web Share API inside a WebView.
+- **Backup import now uses native FilePicker** — on Capacitor native, the "Choose file" button uses the native file picker (if available) to select a `.json` file from device storage.
+- Flow on Android: write temp JSON to Cache dir → `Share.share({ files: [uri] })` → native share sheet opens (save to Files, send to WhatsApp, etc.) → temp file cleaned up.
+- If native share fails/cancelled → Copy & Save modal appears with clipboard fallback.
+- Web browser flow unchanged (blob download → Web Share → clipboard).
+- Added `pickBackupFile()` helper for cross-platform file picking.
+- Installed `@capacitor/share` and `@capacitor/filesystem` packages.
+
+### Required — Android setup
+Run in your Capacitor project:
+```bash
+npm install @capacitor/share @capacitor/filesystem
+npx cap sync android
+```
+
+---
+
 ## [6.3.1] — 2026-07-18
 
 ### Fixed — Critical
